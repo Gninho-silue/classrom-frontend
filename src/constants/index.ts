@@ -8,7 +8,7 @@ export const DEPARTMENTS = [
 ];
 
 export const DEPARTMENTS_OPTIONS = DEPARTMENTS.map(dept => ({ 
-    label: dept, value: dept.toLowerCase() 
+    label: dept, value: dept
 }));
 
 export const MOCK_COURSES: Subject[] = [
