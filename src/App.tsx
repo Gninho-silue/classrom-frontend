@@ -15,8 +15,8 @@ import { dataProvider } from "./providers/data";
 import Dashboard from "./pages/dashboard";
 import { BookOpen, Home } from "lucide-react";
 import { Layout } from "./components/refine-ui/layout/layout";
-import SubjectList from "./subjects/list";
-import SubjectCreate from "./subjects/create";
+import SubjectList from "./pages/subjects/list";
+import SubjectCreate from "./pages/subjects/create";
 function App() {
   return (
     <BrowserRouter>
