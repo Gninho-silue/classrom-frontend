@@ -35,8 +35,8 @@ function App() {
 
               resources={[
                 {
-                  name: 'dashboard', 
-                  list: '/', meta: { label: 'Home', icon: <Home />}
+                  name: 'dashboard',
+                  list: '/', meta: { label: 'Home', icon: <Home /> }
                 },
                 {
                   name: 'subjects',
