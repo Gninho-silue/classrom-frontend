@@ -76,19 +76,18 @@ const Create = () => {
         },
     ];
 
-    const bannerPublicId = form.watch("bannerCloudinaryPublicId");
-
+    const bannerPublicId = form.watch("bannerCldPubId");
     const setBannerImage = (file, field) => {
         if (file) {
             field.onChange(file.url);
-            form.setValue("bannerCloudinaryPublicId", file.publicId, {
+            form.setValue("bannerCldPubId", file.publicId, {
                 shouldValidate: true,
                 shouldDirty: true
             });
         }
         else {
             field.onChange('');
-            form.setValue("bannerCloudinaryPublicId", '', {
+            form.setValue("bannerCldPubId", '', {
                 shouldValidate: true,
                 shouldDirty: true
             });
@@ -130,14 +129,14 @@ const Create = () => {
                                             </FormLabel>
                                             <FormControl>
                                                 <UploadWidget value={field.value ? { url: field.value, publicId: bannerPublicId ?? '' } : null}
-                                                    onChange={(file: any, field: any) => setBannerImage(file, field)} />
+                                                    onChange={(file: any) => setBannerImage(file, field)} />
                                             </FormControl>
                                             <FormMessage />
                                             <FormDescription>
                                                 Upload a banner image for the class.
                                             </FormDescription>
-                                            {errors.bannerCloudinaryPublicId && !errors.bannerUrl && (
-                                                <p className="text-destructive">{errors.bannerCloudinaryPublicId.message?.toString()}</p>
+                                            {errors.bannerCldPubId && !errors.bannerUrl && (
+                                                <p className="text-destructive">{errors.bannerCldPubId.message?.toString()}</p>
                                             )}
                                         </FormItem>
                                     )}
