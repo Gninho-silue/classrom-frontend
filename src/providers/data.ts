@@ -5,6 +5,23 @@ import { BACKEND_BASE_URL } from "@/constants";
 if (!BACKEND_BASE_URL) {
   throw new Error("BACKEND_BASE_URL is not defined. Please check your environment variables.");
 }
+
+const buildHttpError = async (response: Response) => {
+  let messagge = "Request failed";
+  try {
+     const payload = await response.json() as { message?: string };
+     if (payload?.message) {
+      messagge = payload.message;
+     }
+  } catch {
+    
+  }
+  return {
+    message: messagge,
+    statusCode: response.status
+  }
+};
+
 const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
@@ -54,11 +71,17 @@ const options: CreateDataProviderOptions = {
     },
 
     mapResponse: async (response) => {
+      if (!response.ok) {
+        throw await buildHttpError(response);
+      }
       const payload: ListResponse = await response.clone().json();
       return payload.data ?? [];
     },
 
     getTotalCount: async (response) => {
+      if (!response.ok) {
+        throw await buildHttpError(response);
+      }
       const payload: ListResponse = await response.clone().json();
       return payload.pagination?.total ?? payload.data?.length ?? 0;
     },
