@@ -36,7 +36,7 @@ const Create = () => {
 
     });
 
-    const { refineCore: { onFinish},
+    const { refineCore: { onFinish },
         handleSubmit,
         formState: { isSubmitting, errors },
         control,
@@ -188,7 +188,7 @@ const Create = () => {
                                                         {subjects.map((subject) => (
                                                             <SelectItem
                                                                 key={subject.id}
-                                                                value={subject.id.toString()}
+                                                                value={String(subject.id)}
                                                             >
                                                                 {subject.name} ({subject.code})
                                                             </SelectItem>
@@ -222,7 +222,7 @@ const Create = () => {
                                                         {teachers.map((teacher) => (
                                                             <SelectItem
                                                                 key={teacher.id}
-                                                                value={teacher.id.toString()}
+                                                                value={String(teacher.id)}
                                                             >
                                                                 {teacher.name}
                                                             </SelectItem>
