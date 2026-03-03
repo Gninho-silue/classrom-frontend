@@ -11,7 +11,7 @@ import {
     Calendar,
     Users,
     BookOpen,
-    User,
+    User as UserIcon,
     Info,
     Clock,
     Hash,
@@ -20,8 +20,10 @@ import {
     Copy,
     Mail,
     UserPlus,
-    LayoutDashboard
+    LayoutDashboard,
+    GraduationCap
 } from "lucide-react";
+import { User, Schedule } from "@/types";
 
 export default function ClassShow() {
     const { query: queryResult } = useShow();
@@ -30,8 +32,8 @@ export default function ClassShow() {
 
     const record = data?.data;
 
-    const { query: studentsQuery } = useList({
-        resource: record?.id ? `classes/${record.id}/users` : "",
+    const { query: studentsQuery } = useList<User>({
+        resource: record?.id ? `classes/${record.id}/users` : "__disabled__",
         filters: [{ field: 'role', operator: 'eq', value: 'student' }],
         queryOptions: {
             enabled: !!record?.id
@@ -50,10 +52,20 @@ export default function ClassShow() {
         }
     };
 
-    const copyInviteCode = () => {
-        if (record?.inviteCode) {
-            navigator.clipboard.writeText(record.inviteCode);
+    const copyInviteCode = async () => {
+        if (!record?.inviteCode) return;
+
+        if (!navigator?.clipboard) {
+            toast.error("Clipboard access not supported in this browser.");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(record.inviteCode);
             toast.success("Invite code copied to clipboard!");
+        } catch (err) {
+            console.error("Failed to copy invite code:", err);
+            toast.error("Failed to copy to clipboard.");
         }
     };
 
@@ -115,11 +127,16 @@ export default function ClassShow() {
                                     {record?.name}
                                 </h1>
                                 <div className="flex flex-wrap items-center gap-6 text-white/90">
-                                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 cursor-pointer hover:bg-white/20 transition-all font-mono text-sm" onClick={copyInviteCode}>
-                                        <Hash className="size-4 text-primary-foreground" />
+                                    <button
+                                        type="button"
+                                        className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 cursor-pointer hover:bg-white/20 transition-all font-mono text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                        onClick={copyInviteCode}
+                                        aria-label="Copy invite code"
+                                    >
+                                        <Hash className="size-4 text-primary-foreground" aria-hidden="true" />
                                         <span>{record?.inviteCode}</span>
-                                        <Copy className="size-3.5 ml-1 opacity-60" />
-                                    </div>
+                                        <Copy className="size-3.5 ml-1 opacity-60" aria-hidden="true" />
+                                    </button>
                                     <div className="flex items-center gap-2 text-sm font-medium">
                                         <Users className="size-4" />
                                         <span>{record?.capacity} Capacity</span>
@@ -181,7 +198,7 @@ export default function ClassShow() {
                                     <CardContent className="pt-6">
                                         {record?.schedules && record.schedules.length > 0 ? (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {record.schedules.map((schedule: any, index: number) => (
+                                                {record.schedules.map((schedule: Schedule, index: number) => (
                                                     <div key={index} className="flex items-center gap-4 p-4 rounded-xl border bg-gradient-to-br from-muted/50 to-transparent hover:shadow-sm transition-all group">
                                                         <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                                                             <Clock className="size-6" />
@@ -210,7 +227,7 @@ export default function ClassShow() {
                                 <Card className="border-none shadow-md overflow-hidden bg-card/50 backdrop-blur-md">
                                     <CardHeader className="border-b bg-muted/20 pb-4">
                                         <CardTitle className="text-xl flex items-center gap-2">
-                                            <User className="size-5 text-primary" />
+                                            <UserIcon className="size-5 text-primary" />
                                             Instructor
                                         </CardTitle>
                                     </CardHeader>
@@ -242,7 +259,7 @@ export default function ClassShow() {
                                 <Card className="border-none shadow-md overflow-hidden bg-card/50 backdrop-blur-md">
                                     <CardHeader className="border-b bg-muted/20 pb-4">
                                         <CardTitle className="text-xl flex items-center gap-2">
-                                            <GraduationCapIcon className="size-5 text-primary" />
+                                            <GraduationCap className="size-5 text-primary" />
                                             Course Stats
                                         </CardTitle>
                                     </CardHeader>
@@ -276,7 +293,9 @@ export default function ClassShow() {
                             <div className="space-y-4">
                                 <h3 className="text-2xl font-bold border-b pb-4 flex items-center gap-3 text-primary">
                                     Teachers
-                                    <Badge variant="outline" className="ml-2 font-mono">1 member</Badge>
+                                    <Badge variant="outline" className="ml-2 font-mono">
+                                        {record?.teacher ? 1 : 0} member(s)
+                                    </Badge>
                                 </h3>
                                 <div className="p-4 rounded-xl border flex items-center gap-4 hover:bg-muted/30 transition-colors group">
                                     <Avatar className="size-12 border-2 border-primary/20 shadow-sm group-hover:scale-105 transition-transform">
@@ -312,7 +331,7 @@ export default function ClassShow() {
                                     </div>
                                 ) : students.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {students.map((student: any) => (
+                                        {students.map((student: User) => (
                                             <div key={student.id} className="p-4 rounded-xl border flex items-center gap-4 hover:bg-muted/20 hover:border-primary/20 transition-all group">
                                                 <Avatar className="size-10 border border-border group-hover:scale-110 transition-transform">
                                                     <AvatarImage src={student.image} />
@@ -352,43 +371,5 @@ export default function ClassShow() {
     );
 }
 
-function GraduationCap(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-        </svg>
-    );
-}
 
-function GraduationCapIcon(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-            <path d="M6 12v5c3 3 9 3 12 0v-5" />
-        </svg>
-    );
-}
 
