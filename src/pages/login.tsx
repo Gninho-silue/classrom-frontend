@@ -31,7 +31,7 @@ export default function LoginPage() {
       <Card className="w-full sm:w-[440px] border-none shadow-lg bg-card/60 backdrop-blur-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-primary">Sign in</CardTitle>
-          <CardDescription>Welcome back to your admin dashboard</CardDescription>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
 
         <Separator />
