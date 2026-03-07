@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState("student");
   const Link = useLink();
   const { open } = useNotification();
-  const { mutate: register, isLoading } = useRegister();
+  const { mutate: register, isPending: isLoading } = useRegister();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
