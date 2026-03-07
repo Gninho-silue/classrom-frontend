@@ -22,17 +22,28 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import {
+  useGetIdentity,
   useLink,
   useMenu,
   useRefineOptions,
   type TreeMenuItem,
 } from "@refinedev/core";
+import type { Identity } from "@/components/refine-ui/layout/user-avatar";
 import { ChevronRight, ListIcon } from "lucide-react";
 import React from "react";
+
+// Resources hidden for students
+const STUDENT_HIDDEN_RESOURCES = ["users"];
 
 export function Sidebar() {
   const { open } = useShadcnSidebar();
   const { menuItems, selectedKey } = useMenu();
+  const { data: identity } = useGetIdentity<Identity>();
+  const isStudent = identity?.role === "student";
+
+  const visibleItems = isStudent
+    ? menuItems.filter((item) => !STUDENT_HIDDEN_RESOURCES.includes(item.name))
+    : menuItems;
 
   return (
     <ShadcnSidebar collapsible="icon" className={cn("border-none")}>
@@ -55,7 +66,7 @@ export function Sidebar() {
           }
         )}
       >
-        {menuItems.map((item: TreeMenuItem) => (
+        {visibleItems.map((item: TreeMenuItem) => (
           <SidebarItem
             key={item.key || item.name}
             item={item}

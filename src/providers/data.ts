@@ -9,12 +9,12 @@ if (!BACKEND_BASE_URL) {
 const buildHttpError = async (response: Response) => {
   let messagge = "Request failed";
   try {
-     const payload = await response.json() as { message?: string };
-     if (payload?.message) {
+    const payload = await response.json() as { message?: string };
+    if (payload?.message) {
       messagge = payload.message;
-     }
+    }
   } catch {
-    
+
   }
   return {
     message: messagge,
@@ -102,6 +102,41 @@ const options: CreateDataProviderOptions = {
     getEndpoint: ({ resource, id }) => `${resource}/${id}`,
 
     mapResponse: async (response) => {
+      const json: GetOneResponse = await response.json();
+      return json.data ?? {};
+    },
+  },
+
+  update: {
+    getEndpoint: ({ resource, id }) => `${resource}/${id}`,
+
+    // Backend routes use PUT — override the default PATCH
+    getRequestMethod: () => "put",
+
+    buildBodyParams: async ({ variables }) => variables,
+
+    mapResponse: async (response) => {
+      if (!response.ok) {
+        throw await buildHttpError(response);
+      }
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        return {};
+      }
+      const json: GetOneResponse = await response.json();
+      return json.data ?? {};
+    },
+  },
+
+  deleteOne: {
+    getEndpoint: ({ resource, id }) => `${resource}/${id}`,
+
+    mapResponse: async (response) => {
+      if (!response.ok) {
+        throw await buildHttpError(response);
+      }
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        return {};
+      }
       const json: GetOneResponse = await response.json();
       return json.data ?? {};
     },
