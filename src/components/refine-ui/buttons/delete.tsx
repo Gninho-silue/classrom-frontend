@@ -75,12 +75,16 @@ export const DeleteButton = React.forwardRef<
             ref={ref}
             disabled={isDisabled}
           >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {children ?? (
-              <div className="flex items-center gap-2 font-semibold">
-                <Trash className="h-4 w-4" />
-                <span>{label}</span>
-              </div>
+              rest.size === "icon" ? (
+                loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />
+              ) : (
+                <div className="flex items-center gap-2 font-semibold">
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Trash className="h-4 w-4" />
+                  <span>{label}</span>
+                </div>
+              )
             )}
           </Button>
         </span>
