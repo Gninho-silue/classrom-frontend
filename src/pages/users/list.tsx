@@ -28,79 +28,84 @@ export default function UsersList() {
     const [roleFilter, setRoleFilter] = useState("all");
     const { data: identity } = useGetIdentity<Identity>();
 
-    // Students have no access to users
-    if (identity && identity.role === "student") {
-        return <Navigate to="/" replace />;
-    }
+    const isStudent = identity?.role === "student";
 
     const searchFilter = search ? [{ field: "search", operator: "eq" as const, value: search }] : [];
     const roleFilterArr = roleFilter !== "all" ? [{ field: "role", operator: "eq" as const, value: roleFilter }] : [];
 
+    const columns = useMemo<ColumnDef<User>[]>(() => [
+        {
+            id: "name",
+            accessorKey: "name",
+            size: 250,
+            header: () => <p className="column-title">User</p>,
+            cell: ({ row }) => (
+                <div className="flex items-center gap-3">
+                    <Avatar className="size-9 border">
+                        <AvatarImage src={row.original.image} />
+                        <AvatarFallback className="bg-primary/5 text-primary font-bold text-xs">
+                            {(row.original.name || "U")[0]}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="font-semibold text-sm">{row.original.name}</p>
+                        <p className="text-xs text-muted-foreground">{row.original.email}</p>
+                    </div>
+                </div>
+            ),
+        },
+        {
+            id: "role",
+            accessorKey: "role",
+            size: 120,
+            header: () => <p className="column-title">Role</p>,
+            cell: ({ row }) => (
+                <Badge className={`${roleColors[row.original.role] ?? ""} capitalize`}>
+                    {row.original.role}
+                </Badge>
+            ),
+        },
+        {
+            id: "createdAt",
+            accessorKey: "createdAt",
+            size: 120,
+            header: () => <p className="column-title">Joined</p>,
+            cell: ({ row }) => (
+                <span className="text-sm text-muted-foreground">
+                    {new Date(row.original.createdAt).toLocaleDateString()}
+                </span>
+            ),
+        },
+        {
+            id: "actions",
+            size: 100,
+            header: () => <p className="column-title"></p>,
+            cell: ({ row }) => (
+                <div className="flex items-center gap-1 justify-end">
+                    <ShowButton recordItemId={row.original.id} size="icon" variant="ghost" />
+                    <EditButton recordItemId={row.original.id} size="icon" variant="ghost" />
+                    <DeleteButton recordItemId={row.original.id} size="icon" variant="ghost" />
+                </div>
+            ),
+        },
+    ], []);
+
     const userTable = useTable<User>({
-        columns: useMemo<ColumnDef<User>[]>(() => [
-            {
-                id: "name",
-                accessorKey: "name",
-                size: 250,
-                header: () => <p className="column-title">User</p>,
-                cell: ({ row }) => (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-9 border">
-                            <AvatarImage src={row.original.image} />
-                            <AvatarFallback className="bg-primary/5 text-primary font-bold text-xs">
-                                {(row.original.name || "U")[0]}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-semibold text-sm">{row.original.name}</p>
-                            <p className="text-xs text-muted-foreground">{row.original.email}</p>
-                        </div>
-                    </div>
-                ),
-            },
-            {
-                id: "role",
-                accessorKey: "role",
-                size: 120,
-                header: () => <p className="column-title">Role</p>,
-                cell: ({ row }) => (
-                    <Badge className={`${roleColors[row.original.role] ?? ""} capitalize`}>
-                        {row.original.role}
-                    </Badge>
-                ),
-            },
-            {
-                id: "createdAt",
-                accessorKey: "createdAt",
-                size: 120,
-                header: () => <p className="column-title">Joined</p>,
-                cell: ({ row }) => (
-                    <span className="text-sm text-muted-foreground">
-                        {new Date(row.original.createdAt).toLocaleDateString()}
-                    </span>
-                ),
-            },
-            {
-                id: "actions",
-                size: 100,
-                header: () => <p className="column-title"></p>,
-                cell: ({ row }) => (
-                    <div className="flex items-center gap-1 justify-end">
-                        <ShowButton recordItemId={row.original.id} size="icon" variant="ghost" />
-                        <EditButton recordItemId={row.original.id} size="icon" variant="ghost" />
-                        <DeleteButton recordItemId={row.original.id} size="icon" variant="ghost" />
-                    </div>
-                ),
-            },
-        ], []),
+        columns,
         refineCoreProps: {
             resource: "users",
             pagination: { pageSize: 10, mode: "server" },
             filters: {
                 permanent: [...searchFilter, ...roleFilterArr],
             },
+            queryOptions: { enabled: !isStudent },
         },
     });
+
+    // Students have no access to users — check after all hooks
+    if (isStudent) {
+        return <Navigate to="/" replace />;
+    }
 
     return (
         <ListView>

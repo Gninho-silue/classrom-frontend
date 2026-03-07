@@ -25,6 +25,7 @@ jobs:
         run: npm ci
 
       - name: Create env file for build
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         run: |
           cat > .env << 'EOF'
           VITE_BACKEND_BASE_URL=${{ secrets.VITE_BACKEND_BASE_URL }}
@@ -38,13 +39,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 7
 
   deploy:
     name: Deploy to Vercel

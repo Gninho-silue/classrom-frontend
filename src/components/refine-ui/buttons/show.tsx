@@ -51,7 +51,7 @@ export const ShowButton = React.forwardRef<
     if (isHidden) return null;
 
     return (
-      <Button {...rest} ref={ref} disabled={isDisabled} asChild>
+      <Button {...rest} ref={ref} disabled={isDisabled} asChild aria-label={rest.size === "icon" ? label : undefined}>
         <LinkComponent
           to={to}
           replace={false}

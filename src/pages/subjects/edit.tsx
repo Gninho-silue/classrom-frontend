@@ -66,7 +66,7 @@ export default function SubjectEdit() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Department *</Label>
+                            <Label htmlFor="departmentId">Department *</Label>
                             <Controller
                                 name="departmentId"
                                 control={control}
@@ -76,7 +76,7 @@ export default function SubjectEdit() {
                                         value={field.value ? String(field.value) : ""}
                                         onValueChange={(val) => field.onChange(Number(val))}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger id="departmentId">
                                             <SelectValue placeholder="Select a department" />
                                         </SelectTrigger>
                                         <SelectContent>

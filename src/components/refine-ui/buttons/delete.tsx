@@ -74,6 +74,7 @@ export const DeleteButton = React.forwardRef<
             {...rest}
             ref={ref}
             disabled={isDisabled}
+            aria-label={rest.size === "icon" ? label : undefined}
           >
             {children ?? (
               rest.size === "icon" ? (

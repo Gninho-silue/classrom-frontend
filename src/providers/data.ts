@@ -119,6 +119,9 @@ const options: CreateDataProviderOptions = {
       if (!response.ok) {
         throw await buildHttpError(response);
       }
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        return {};
+      }
       const json: GetOneResponse = await response.json();
       return json.data ?? {};
     },
@@ -130,6 +133,9 @@ const options: CreateDataProviderOptions = {
     mapResponse: async (response) => {
       if (!response.ok) {
         throw await buildHttpError(response);
+      }
+      if (response.status === 204 || response.headers.get("Content-Length") === "0") {
+        return {};
       }
       const json: GetOneResponse = await response.json();
       return json.data ?? {};

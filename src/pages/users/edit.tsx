@@ -38,6 +38,18 @@ export default function UserEdit() {
     );
   }
 
+  if (query?.isError || (!isPageLoading && !query?.data?.data)) {
+    return (
+      <EditView>
+        <EditViewHeader title="Error" />
+        <div className="flex h-96 flex-col items-center justify-center gap-4">
+          <p className="text-muted-foreground">Failed to load user. The record may not exist or you may not have permission to edit it.</p>
+          <Button variant="outline" onClick={() => history.back()}>Go Back</Button>
+        </div>
+      </EditView>
+    );
+  }
+
   return (
     <EditView>
       <EditViewHeader title="Edit User" />
@@ -75,13 +87,13 @@ export default function UserEdit() {
             </div>
 
             <div className="space-y-2">
-              <Label>Role *</Label>
+              <Label htmlFor="role">Role *</Label>
               <input type="hidden" {...register("role", { required: "Role is required" })} />
               <Select
                 value={currentRole || ""}
                 onValueChange={(val) => setValue("role", val, { shouldValidate: true })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="role">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
                 <SelectContent>
