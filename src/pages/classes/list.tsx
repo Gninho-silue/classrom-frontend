@@ -10,13 +10,31 @@ import {useTable} from "@refinedev/react-table";
 import {ClassDetails, Subject, User} from "@/types";
 import {ColumnDef} from "@tanstack/react-table";
 import {Badge} from "@/components/ui/badge.tsx";
-import {useList} from "@refinedev/core";
+import {useGetIdentity, useList} from "@refinedev/core";
 import {ShowButton} from "@/components/refine-ui/buttons/show.tsx";
+import {EditButton} from "@/components/refine-ui/buttons/edit.tsx";
+import {DeleteButton} from "@/components/refine-ui/buttons/delete.tsx";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {toast} from "sonner";
+import {BACKEND_BASE_URL} from "@/constants";
+import type {Identity} from "@/components/refine-ui/layout/user-avatar";
 
 const ClassesList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('all');
     const [selectedTeacher, setSelectedTeacher] = useState('all');
+
+    const { data: identity } = useGetIdentity<Identity>();
+    const isStudent = identity?.role === 'student';
 
     const { query: subjectsQuery } = useList<Subject>({
         resource: 'subjects',
@@ -26,7 +44,8 @@ const ClassesList = () => {
     const { query: teachersQuery } = useList<User>({
         resource: 'users',
         filters: [{ field: 'role', operator: 'eq', value: 'teacher' }],
-        pagination: { pageSize: 100 }
+        pagination: { pageSize: 100 },
+        queryOptions: { enabled: !isStudent },
     });
 
     const subjects = subjectsQuery?.data?.data || [];
@@ -101,12 +120,22 @@ const ClassesList = () => {
             cell: ({ getValue }) => <span className="text-foreground">{getValue<number>()}</span>,
         },
         {
-            id: 'details',
-            size: 140,
-            header: () => <p className="column-title">Details</p>,
-            cell: ({ row }) => <ShowButton resource="classes" recordItemId={row.original.id} variant="outline" size="sm">View</ShowButton>
+            id: 'actions',
+            size: 130,
+            header: () => <p className="column-title"></p>,
+            cell: ({ row }) => (
+                <div className="flex items-center gap-1 justify-end">
+                    <ShowButton resource="classes" recordItemId={row.original.id} size="icon" variant="ghost" />
+                    {!isStudent && (
+                        <>
+                            <EditButton resource="classes" recordItemId={row.original.id} size="icon" variant="ghost" />
+                            <DeleteButton resource="classes" recordItemId={row.original.id} size="icon" variant="ghost" />
+                        </>
+                    )}
+                </div>
+            )
         }
-    ], []);
+    ], [isStudent]);
 
     const classTable = useTable<ClassDetails>({
         columns: classColumns,
@@ -147,17 +176,12 @@ const ClassesList = () => {
                     </div>
 
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <Select
-                            value={selectedSubject} onValueChange={setSelectedSubject}
-                        >
+                        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Filter by subject" />
                             </SelectTrigger>
-
                             <SelectContent>
-                                <SelectItem value="all">
-                                    All Subjects
-                                </SelectItem>
+                                <SelectItem value="all">All Subjects</SelectItem>
                                 {subjects.map(subject => (
                                     <SelectItem key={subject.id} value={subject.name}>
                                         {subject.name}
@@ -166,33 +190,108 @@ const ClassesList = () => {
                             </SelectContent>
                         </Select>
 
-                        <Select
-                            value={selectedTeacher} onValueChange={setSelectedTeacher}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Filter by teacher" />
-                            </SelectTrigger>
+                        {!isStudent && (
+                            <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by teacher" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Teachers</SelectItem>
+                                    {teachers.map(teacher => (
+                                        <SelectItem key={teacher.id} value={teacher.name}>
+                                            {teacher.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
 
-                            <SelectContent>
-                                <SelectItem value="all">
-                                    All Teachers
-                                </SelectItem>
-                                {teachers.map(teacher => (
-                                    <SelectItem key={teacher.id} value={teacher.name}>
-                                        {teacher.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <CreateButton resource="classes" />
+                        {isStudent ? (
+                            <JoinClassDialog />
+                        ) : (
+                            <CreateButton resource="classes" />
+                        )}
                     </div>
                 </div>
             </div>
 
             <DataTable table={classTable} />
         </ListView>
-    )
+    );
 }
 
-export default ClassesList
+function JoinClassDialog() {
+    const [open, setOpen] = useState(false);
+    const [inviteCode, setInviteCode] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleJoin = async () => {
+        if (!inviteCode.trim()) {
+            toast.error("Please enter an invite code.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const baseUrl = BACKEND_BASE_URL.replace(/\/api\/?$/, '');
+            const res = await fetch(`${baseUrl}/api/classes/join`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inviteCode: inviteCode.trim() }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.error ?? "Failed to join class.");
+                return;
+            }
+
+            toast.success(`Successfully joined "${data.data.className}"!`);
+            setInviteCode('');
+            setOpen(false);
+            window.location.reload();
+        } catch {
+            toast.error("Could not connect to server.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="default">Join Class</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Join a Class</DialogTitle>
+                    <DialogDescription>
+                        Enter the invite code provided by your teacher to enroll in a class.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-2">
+                    <Input
+                        placeholder="Enter invite code (e.g. a3f9bc12)"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+                        className="font-mono"
+                        autoFocus
+                    />
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
+                        Cancel
+                    </Button>
+                    <Button onClick={handleJoin} disabled={isLoading}>
+                        {isLoading ? "Joining..." : "Join"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export default ClassesList;
