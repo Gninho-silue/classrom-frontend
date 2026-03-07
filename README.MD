@@ -1,47 +1,114 @@
-# classrom-frontend
+# Classroom Frontend
 
-<div align="center" style="margin: 30px;">
-    <a href="https://refine.dev">
-    <img alt="refine logo" src="https://refine.ams3.cdn.digitaloceanspaces.com/readme/refine-readme-banner.png">
-    </a>
-</div>
-<br/>
+Admin dashboard and student portal for the Classroom Management System — built with React 19, Refine v5, shadcn/ui, and Tailwind CSS v4.
 
-This [Refine](https://github.com/refinedev/refine) project was generated with [create refine-app](https://github.com/refinedev/refine/tree/master/packages/create-refine-app).
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + Vite |
+| Admin framework | Refine v5 |
+| UI components | shadcn/ui + Tailwind CSS v4 |
+| Forms | React Hook Form + Zod |
+| Auth | better-auth (via backend) |
+| Image uploads | Cloudinary upload widget |
+| Deployment | Vercel |
+
+## Prerequisites
+
+- Node.js 20+
+- The [backend](../classrom-backend) running on port 8000
 
 ## Getting Started
 
-A React Framework for building internal tools, admin panels, dashboards & B2B apps with unmatched flexibility ✨
+### 1. Install dependencies
 
-Refine's hooks and components simplifies the development process and eliminates the repetitive tasks by providing industry-standard solutions for crucial aspects of a project, including authentication, access control, routing, networking, state management, and i18n.
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Copy the example below into a `.env` file at the project root:
+
+```env
+VITE_BACKEND_BASE_URL=http://localhost:8000/api/
+
+# Cloudinary (optional — only needed for image uploads)
+VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
+VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+VITE_CLOUDINARY_UPLOAD_URL=https://api.cloudinary.com/v1_1/your_cloud_name/image/upload
+```
+
+### 3. Start the development server
+
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:5173`.
 
 ## Available Scripts
 
-### Running the development server.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the Vite dev server with HMR |
+| `npm run build` | Type-check and build for production (`dist/`) |
+| `npm run preview` | Preview the production build locally |
 
-```bash
-    npm run dev
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── refine-ui/          # Refine-aware components (buttons, data table, views, layout)
+│   └── ui/                 # shadcn/ui primitives
+├── constants/              # BACKEND_BASE_URL, Cloudinary config, role constants
+├── lib/
+│   └── schema.ts           # Zod schemas (faculty, class, enrollment)
+├── pages/
+│   ├── auth/               # login.tsx, register.tsx
+│   ├── classes/            # list, create, show (enrollments), edit
+│   ├── dashboard/          # dashboard.tsx
+│   ├── departments/        # list, create, show, edit
+│   ├── subjects/           # list, create, show, edit
+│   └── users/              # list, show, edit
+├── providers/
+│   ├── auth.ts             # Refine authProvider — talks to better-auth endpoints
+│   └── data.ts             # Refine dataProvider — wraps @refinedev/rest with custom mappers
+├── types/
+│   └── index.ts            # User, Subject, Department, ClassDetails, Schedule, etc.
+└── App.tsx                 # Refine root — resources, routes, providers
 ```
 
-### Building for production.
+## Roles & Access Control
 
-```bash
-    npm run build
-```
+| Role | Access |
+|---|---|
+| `admin` | Full access to all resources |
+| `teacher` | Dashboard, classes, subjects, departments; read-only users |
+| `student` | Dashboard and classes only (join via invite code) |
 
-### Running the production server.
+Role checks are done directly in components via `useGetIdentity`.
 
-```bash
-    npm run start
-```
+## Authentication
 
-## Learn More
+Auth is handled entirely by the backend (better-auth). The frontend sends credentials to `/api/auth/*` with `credentials: include` — session cookies are managed by the browser.
 
-To learn more about **Refine**, please check out the [Documentation](https://refine.dev/docs)
+- **Login**: `POST /api/auth/sign-in/email`
+- **Register**: `POST /api/auth/sign-up/email`
+- **Logout**: `POST /api/auth/sign-out`
+- **Session**: `GET /api/auth/get-session`
 
-- **REST Data Provider** [Docs](https://refine.dev/docs/core/providers/data-provider/#overview)
-- **shadcn/ui** [Docs](https://refine.dev/docs/guides-concepts/general-concepts/#headless-concept)
-- **React Router** [Docs](https://refine.dev/docs/core/providers/router-provider/)
+## Deployment
+
+The project deploys automatically to Vercel on every push to `main` via GitHub Actions. The workflow:
+
+1. Runs `tsc --noEmit` (type-check)
+2. Runs `npm run build`
+3. Deploys to Vercel using `vercel --prod`
+
+Required GitHub secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, and the `VITE_*` secrets listed above.
 
 ## License
 
